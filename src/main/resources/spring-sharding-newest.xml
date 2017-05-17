@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:rdb="http://www.dangdang.com/schema/ddframe/rdb"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-4.1.xsd 
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx-4.1.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-4.1.xsd
+		http://www.dangdang.com/schema/ddframe/rdb 
+		http://www.dangdang.com/schema/ddframe/rdb/rdb.xsd">
+		
+	<context:component-scan base-package="com.qiguan.sharding" />
+
+	<rdb:strategy id="databaseShardingStrategy"
+		sharding-columns="user_id"
+		algorithm-class="com.qiguan.sharding.algorithm.UserSingleKeyDatabaseShardingAlgorithm" />
+	
+	<rdb:strategy id="tableShardingStrategy" sharding-columns="user_id"
+		algorithm-class="com.qiguan.sharding.algorithm.UserSingleKeyTableShardingAlgorithm" />
+
+	<rdb:data-source id="shardingDataSource">
+		<rdb:sharding-rule data-sources="sharding_0,sharding_1">
+			<rdb:table-rules>
+				<rdb:table-rule logic-table="t_user" actual-tables="t_user_${0..1}"
+					database-strategy="databaseShardingStrategy" table-strategy="tableShardingStrategy">
+				</rdb:table-rule>
+			</rdb:table-rules>
+		</rdb:sharding-rule>
+	</rdb:data-source>
+
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="shardingDataSource" />
+	</bean>
+	
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.qiguan.sharding.mapper" />
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+	</bean>
+
+	<!-- 配置sqlSessionFactory -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="shardingDataSource" />
+		<property name="mapperLocations" value="classpath*:mapper/*Mapper.xml" />
+	</bean>
+	
+	<tx:annotation-driven transaction-manager="transactionManager" />
+</beans>
