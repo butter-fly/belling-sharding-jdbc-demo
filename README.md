@@ -1,5 +1,5 @@
 # sharding-jdbc-demo
-1、基于Sharding-jdbc版本1.100 和 1.4.2 测试Demo </br>
+1、基于Sharding-jdbc版本1.0.0 和 1.4.2 测试Demo </br>
 2、主要为用户表t_user做分库分表，库分为sharding-0和sharding-1  </br>
 3、每个库有三张分表t_user_0,t_user_1,_t_user_2  </br>
 4、执行Sql脚本在Sql文件夹里 </br>
